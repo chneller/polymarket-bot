@@ -102,7 +102,7 @@ Look for `❌ AVOID` and `⛔ MM/Spread-like` or `⛔ Volume-farmer-like` flags.
 
 Manually flag wallets to never track or copy (e.g. hedgers, market makers):
 
-- **`data/blocked_wallets.txt`** — One address per line; `#` comments allowed
+- **`data/blocked_wallets.txt`** (optional, git-ignored) — copy `data/blocked_wallets.txt.example`; one address per line; `#` comments allowed
 - **`WALLET_COPY_BLOCKED_WALLETS`** — Env override, comma-separated
 
 Blocked wallets are excluded from rotation candidates, leaderboard merge, and copy.
@@ -121,7 +121,7 @@ Blocked wallets are excluded from rotation candidates, leaderboard merge, and co
 ### Enabling Rotation
 
 ```bash
-# In your config (e.g. settings.chr.live)
+# In your config (e.g. settings.wallet_a.live)
 WALLET_ROTATION_ENABLED=true
 WALLET_COPY_USE_LEADERBOARD=false   # Rotation replaces leaderboard merge
 TRACKED_WALLETS=0xabc...,0xdef...   # Initial seed (or leave empty to start from leaderboard)

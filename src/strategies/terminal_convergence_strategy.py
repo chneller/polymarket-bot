@@ -28,6 +28,7 @@ from datetime import datetime
 
 from .base_strategy import BaseStrategy, Signal, SignalType, MarketData
 from ..logging_utils import cprint
+from ..fees import category_fee_rate
 from ..config import (
     TERMINAL_CONVERGENCE_WINDOW_SECONDS,
     TERMINAL_MIN_EDGE_CENTS,
@@ -50,7 +51,7 @@ def _crypto_taker_fee_cents(price: float, fee_rate_bps: Optional[float], fees_en
     if price <= 0 or price >= 1:
         return 0.0
     if fee_rate_bps is None:
-        fee_rate_bps = TRADING_FEE_RATE * 10_000 if TRADING_FEE_RATE <= 1 else TRADING_FEE_RATE
+        fee_rate_bps = category_fee_rate() * 10_000
     fee_rate = max(float(fee_rate_bps), 0.0) / 10_000.0
     return 100.0 * fee_rate * price * (1.0 - price)
 

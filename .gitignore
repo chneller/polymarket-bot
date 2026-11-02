@@ -72,3 +72,28 @@ data/*.sqlite-trace-wal
 binance_microstructure_vps.sqlite
 *.db
 *.sqlite.bak
+# Secrets and keys
+.env.*
+!env.example
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+# Personal wallet configs (commit only *.example* templates)
+config/settings.*
+!config/settings.*example*
+# Local data and logs
+data/orders/
+data/*.csv
+data/collectors/
+*.sqlite
+*.sqlite-*
+logs/
+# User-generated ML data and models (train locally, see README)
+data/ml/artifacts/*
+!data/ml/artifacts/.gitkeep
+data/ml/ohlc/**/*.csv
+*.pkl
+# Optional user blocklist
+data/blocked_wallets.txt

@@ -1,6 +1,6 @@
 # bs-p Native Engine — Deployment Guide
 
-From smoke test to live trading on CHR wallet ($304 USDC).
+From smoke test to live trading on a single wallet profile (example ID `WALLET_A`).
 
 ---
 
@@ -24,16 +24,16 @@ On Linux VPS later, the same Makefile handles `.so` + AVX-512 auto-detection.
 
 ---
 
-## 1. Create the CHR Config File
+## 1. Create the WALLET_A Config File
 
-Copy the template below to `config/settings.chr.live`:
+Copy the template below to `config/settings.wallet_a.live`:
 
 ```bash
-cp config/settings.chr.live.example config/settings.chr.live
+cp config/settings.wallet_a.live.example config/settings.wallet_a.live
 ```
 
 This config focuses on **spread + orderbook imbalance** only, with conservative
-bs-p parameters for a $304 bankroll.  Everything else is disabled.
+bs-p parameters for a small bankroll.  Everything else is disabled.
 
 ---
 
@@ -61,10 +61,10 @@ Key tests to watch:
 ### 3a. Start paper mode
 
 ```bash
-BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.live \
-BOT_WALLET_ID=CHR \
+BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_a.live \
+BOT_WALLET_ID=WALLET_A \
 PAPER_TRADING=true \
-caffeinate -i ./venv/bin/python -m src.bot --strategy all
+./venv/bin/python -m src.bot --strategy all
 ```
 
 The `PAPER_TRADING=true` env var overrides the config file value.
@@ -106,7 +106,7 @@ If you want extra confidence, you can run a shadow comparison before going live.
 Add this to the config:
 
 ```env
-# In settings.chr.live, temporarily:
+# In settings.wallet_a.live, temporarily:
 PAPER_TRADING=true
 ```
 
@@ -117,7 +117,7 @@ quotes in the activity log:
 
 ---
 
-## 5. Go Live on CHR Wallet
+## 5. Go Live on WALLET_A Wallet
 
 ### 5a. Pre-flight checklist
 
@@ -125,7 +125,7 @@ quotes in the activity log:
 □ Paper traded 48h+ with no crashes
 □ Unit tests pass
 □ PAPER_TRADING is set to false in config
-□ CHR wallet has ~$304 USDC
+□ WALLET_A wallet is funded with the bankroll you intend to risk
 □ Telegram alerts are configured and receiving
 □ ADAPTIVE_RISK_ENABLED=true
 □ NATIVE_ENGINE_ENABLED=true (default)
@@ -135,9 +135,9 @@ quotes in the activity log:
 ### 5b. Launch
 
 ```bash
-BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.live \
-BOT_WALLET_ID=CHR \
-caffeinate -i ./venv/bin/python -m src.bot --strategy all
+BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_a.live \
+BOT_WALLET_ID=WALLET_A \
+./venv/bin/python -m src.bot --strategy all
 ```
 
 ### 5c. First 24h live — watch closely
@@ -153,7 +153,7 @@ caffeinate -i ./venv/bin/python -m src.bot --strategy all
 
 | Bankroll     | QUOTING_GAMMA | KELLY_FRACTION_MODE | QUOTING_K | Action                    |
 |-------------|---------------|---------------------|-----------|---------------------------|
-| $304        | 1.0           | quarter             | 2.0       | Starting (conservative)   |
+| Small (starting)     | 1.0           | quarter             | 2.0       | Starting (conservative)   |
 | $500+       | 0.7           | quarter             | 2.0       | Reduce gamma              |
 | $750+       | 0.5           | half                | 2.5       | Switch to half Kelly      |
 | $1,000+     | 0.4           | half                | 3.0       | k tracks fill rate data   |
@@ -165,16 +165,16 @@ Update gamma in the config file and restart the bot.  No rebuild needed.
 
 ## 7. Expanding to Other Wallets
 
-Once CHR is profitable for 1+ week:
+Once WALLET_A is profitable for 1+ week:
 
-1. Create `config/settings.bb.live` with same bs-p params
+1. Create `config/settings.wallet_b.live` with same bs-p params
 2. Adjust `ORDER_SIZE_USD` and `MAX_POSITION_USD` for that wallet's bankroll
 3. Run as a second process:
 
 ```bash
-BOT_PUBLIC_CONFIG_FILE=./config/settings.bb.live \
-BOT_WALLET_ID=BB \
-caffeinate -i ./venv/bin/python -m src.bot --strategy all
+BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_b.live \
+BOT_WALLET_ID=WALLET_B \
+./venv/bin/python -m src.bot --strategy all
 ```
 
 Both processes share the same `libpmkernel.dylib` — no separate builds needed.
@@ -195,8 +195,8 @@ the config file and the bot re-reads on next scan.  To be safe, restart:
 
 ```bash
 # Ctrl+C the bot, then relaunch with:
-NATIVE_ENGINE_ENABLED=false BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.live \
-BOT_WALLET_ID=CHR caffeinate -i ./venv/bin/python -m src.bot --strategy all
+NATIVE_ENGINE_ENABLED=false BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_a.live \
+BOT_WALLET_ID=WALLET_A ./venv/bin/python -m src.bot --strategy all
 ```
 
 ### Segfault or crash

@@ -98,7 +98,7 @@
 
 ## 5. Profile Config
 
-- [x] Add ML settings to profile config such as `config/settings.chr.live`
+- [x] Add ML settings to profile config such as `config/settings.wallet_a.live`
  - [ ] Before paper trading, set:
    - [ ] `PAPER_TRADING=true`
    - [ ] `ML_DIRECTIONAL_ENABLED=true`
@@ -111,11 +111,11 @@
  - [x] Current recommended candidate for cautious paper / tiny-size live testing:
    - [x] Primary: `data/ml/artifacts/ml_directional_15m_ohlc_full.pkl`
    - [x] Secondary: `data/ml/artifacts/ml_directional_1h_ohlc_full.pkl`
-   - [x] Dedicated paper profile: `config/settings.chr.ml_paper.env`
+   - [x] Dedicated paper profile: `config/settings.ml_paper.env`
  - [ ] Run:
    - [ ] Set `ML_DIRECTIONAL_MODEL_PATH_15M=./data/ml/artifacts/ml_directional_15m_ohlc_full.pkl`
    - [ ] Set `ML_DIRECTIONAL_MODEL_PATH_1H=./data/ml/artifacts/ml_directional_1h_ohlc_full.pkl`
-   - [ ] `BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.ml_paper.env BOT_WALLET_ID=CHR ./.venv/bin/python -m src.bot --strategy ml_directional`
+   - [ ] `BOT_PUBLIC_CONFIG_FILE=./config/settings.ml_paper.env BOT_WALLET_ID=WALLET_A ./.venv/bin/python -m src.bot --strategy ml_directional`
  - [ ] Confirm runtime behavior:
    - [ ] Strategy loads artifact successfully
    - [ ] Only 15m/1h BTC Up/Down markets are considered

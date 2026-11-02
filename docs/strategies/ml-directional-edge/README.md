@@ -122,9 +122,9 @@ That means:
 
 ## Config Placement
 
-Put ML directional runtime knobs in your shared profile config such as `config/settings.chr.live`, not in `.env`.
+Put ML directional runtime knobs in your shared profile config such as `config/settings.wallet_a.live`, not in `.env`.
 
- The CHR profile now includes an explicit `ML_DIRECTIONAL_*` section with conservative defaults:
+ The WALLET_A profile now includes an explicit `ML_DIRECTIONAL_*` section with conservative defaults:
  
  - `ML_DIRECTIONAL_ENABLED=false`
  - `ML_DIRECTIONAL_MODEL_PATH=./data/ml/artifacts/ml_directional_latest.pkl`
@@ -249,7 +249,7 @@ Do this after a baseline artifact exists. It is safe to defer replay until train
  Then run:
  
  ```bash
- BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.ml_paper.env BOT_WALLET_ID=CHR ./.venv/bin/python -m src.bot --strategy ml_directional
+ BOT_PUBLIC_CONFIG_FILE=./config/settings.ml_paper.env BOT_WALLET_ID=WALLET_A ./.venv/bin/python -m src.bot --strategy ml_directional
  ```
 
 ## Live Strategy Notes

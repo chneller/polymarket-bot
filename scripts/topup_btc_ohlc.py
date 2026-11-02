@@ -28,6 +28,7 @@ from binance_historical_data import BinanceDataDumper  # noqa: E402
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TICKER = "BTCUSDT"
+BOOTSTRAP_START = os.getenv("OHLC_BOOTSTRAP_START", "2018-01-01")
 TIMEFRAMES = ["15m", "1h", "4h", "1d"]
 DATA_DIR = os.path.join(os.path.dirname(__file__), "../data/ml/ohlc/btc")
 BINANCE_DUMP_DIR = tempfile.mkdtemp(prefix="binance_dump_")
@@ -196,18 +197,22 @@ def topup_timeframe(tf: str):
     print(f"\n{'=' * 60}")
     print(f"  Timeframe: {tf}  →  {CSV_MAP[tf]}")
 
-    if not os.path.exists(csv_path):
-        print(f"  ERROR: existing CSV not found at {csv_path}")
-        return
-
-    existing_raw = pd.read_csv(csv_path, header=0)
-    existing_df = _normalize_frame(existing_raw)
-    if existing_df.empty:
-        print("  ERROR: existing CSV has no valid rows after normalization.")
-        return
-
-    existing_rows = len(existing_df)
-    last_open_ts = existing_df["__open_ts"].iloc[-1]
+    bootstrap = not os.path.exists(csv_path)
+    if bootstrap:
+        # Fresh clone: no CSV yet -> download full history from BOOTSTRAP_START.
+        os.makedirs(DATA_DIR, exist_ok=True)
+        print(f"  No CSV yet, bootstrapping from {BOOTSTRAP_START}")
+        existing_df = pd.DataFrame(columns=COLUMNS)
+        existing_rows = 0
+        last_open_ts = pd.Timestamp(BOOTSTRAP_START, tz="UTC") - _interval_delta(tf)
+    else:
+        existing_raw = pd.read_csv(csv_path, header=0)
+        existing_df = _normalize_frame(existing_raw)
+        if existing_df.empty:
+            print("  ERROR: existing CSV has no valid rows after normalization.")
+            return
+        existing_rows = len(existing_df)
+        last_open_ts = existing_df["__open_ts"].iloc[-1]
     print(f"  Existing rows:         {existing_rows:,}")
     print(f"  Existing through:      {last_open_ts}")
 
@@ -244,6 +249,9 @@ def topup_timeframe(tf: str):
 
     # 2) REST tail from newest merged point to latest closed candle (includes today)
     merged_for_tail = _normalize_frame(pd.concat([existing_df[COLUMNS], bulk_df], ignore_index=True))
+    if merged_for_tail.empty:
+        print("  ERROR: no data downloaded (bulk fetch failed?)")
+        return
     tail_start_ts = merged_for_tail["__open_ts"].iloc[-1] + interval_delta
     print(f"  REST tail from:        {tail_start_ts}")
     rest_df = _fetch_rest_klines(TICKER, tf, tail_start_ts)
@@ -257,7 +265,8 @@ def topup_timeframe(tf: str):
     # 4) Safe rewrite
     to_save = _format_timestamps_for_csv(merged, tf)
     backup_path = csv_path + ".bak"
-    shutil.copy2(csv_path, backup_path)
+    if not bootstrap:
+        shutil.copy2(csv_path, backup_path)
     try:
         to_save.to_csv(csv_path, index=False)
     except Exception:
