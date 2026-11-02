@@ -18,6 +18,9 @@ from .features import DEFAULT_RUNTIME_FEATURE_COLUMNS, FeatureBuilder, align_fea
 from .model import LightGBMBinaryClassifier
 
 
+from ..fees import category_fee_rate, fee_per_share
+
+
 @dataclass
 class ExecutionFrictionModel:
     """Simplified maker-first friction model."""
@@ -28,7 +31,7 @@ class ExecutionFrictionModel:
     calibration_buffer: float = 0.01
 
     def threshold(self, market_price: float, execution_mode: str = "maker") -> float:
-        taker_fee_rate = 0.25 * (market_price * (1.0 - market_price)) ** 2
+        taker_fee_rate = fee_per_share(market_price, category_fee_rate("crypto"))
         fee_cost = taker_fee_rate if execution_mode == "taker" else 0.0
         return fee_cost + self.adverse_selection + self.spread_cost + self.missed_fill_penalty + self.calibration_buffer
 

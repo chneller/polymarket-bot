@@ -1,0 +1,4 @@
+# Optional: wallets that wallet_copy must never track or copy.
+# Copy to data/blocked_wallets.txt (git-ignored) and add one address per line.
+# Lines starting with # are ignored. Env alternative: WALLET_COPY_BLOCKED_WALLETS=0x...,0x...
+# 0x0000000000000000000000000000000000000000

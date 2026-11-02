@@ -557,8 +557,14 @@ GENERAL_RATE_LIMIT = 100
 # =============================================================================
 # FEE STRUCTURE
 # =============================================================================
-# Polymarket trading fee for taker (1% = 0.01). Used by taker strategies.
-TRADING_FEE_RATE = float(os.getenv("TRADING_FEE_RATE", "0.01"))
+# Taker fees follow Polymarket's formula: fee = shares * feeRate * p * (1 - p)
+# (see src/fees.py, https://docs.polymarket.com/trading/fees). Per-market rates come
+# from Gamma's feeSchedule; fallback per category via FEE_RATE_<CATEGORY> env vars,
+# default category FEE_DEFAULT_CATEGORY=crypto (0.07).
+# TRADING_FEE_RATE is DEPRECATED: if set explicitly it is used as a legacy flat
+# fraction of notional. Unset, it holds the crypto worst-case-at-p=0.5 equivalent
+# (0.035 of notional) for code that still needs a single scalar.
+TRADING_FEE_RATE = float(os.getenv("TRADING_FEE_RATE", "0.035"))
 
 # Maker fee (round-trip): 0 = Polymarket makers pay zero fees (2026+). Used by spread strategy.
 MAKER_FEE_RATE = float(os.getenv("MAKER_FEE_RATE", "0"))

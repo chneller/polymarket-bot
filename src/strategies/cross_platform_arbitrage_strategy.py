@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 
 from ..logging_utils import cprint
+from ..fees import estimate_taker_fee
 from ..config import (
     ORDER_SIZE_USD,
     TRADING_FEE_RATE,
@@ -82,7 +83,8 @@ class CrossPlatformArbitrageStrategy(BaseStrategy):
                 continue
 
             combined_cost = pm_yes_ask + kalshi_no_ask
-            edge = 1 - combined_cost - (2 * TRADING_FEE_RATE)
+            # Polymarket taker fee on the PM leg; Kalshi leg approximated with the same curve.
+            edge = 1 - combined_cost - estimate_taker_fee(1.0, pm_yes_ask) - estimate_taker_fee(1.0, kalshi_no_ask)
 
             if edge <= 0 or (edge * 100) < self.min_profit_cents:
                 continue

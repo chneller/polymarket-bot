@@ -11,7 +11,14 @@ import math
 import numpy as np
 import pytest
 
+from src.native.pmkernel import NATIVE_AVAILABLE
 
+requires_native = pytest.mark.skipif(
+    not NATIVE_AVAILABLE, reason="native bs-p library not built (run scripts/build_native.sh)"
+)
+
+
+@requires_native
 def test_native_available():
     from src.native.pmkernel import NATIVE_AVAILABLE
     assert NATIVE_AVAILABLE is True, "Native library not loaded — run scripts/build_native.sh"
@@ -140,6 +147,7 @@ class TestOrderBookMicrostructure:
 
 
 class TestKellyIntegration:
+    @requires_native
     def test_kelly_size_with_inventory(self):
         from src.sizing.kelly import kelly_size
         r0 = kelly_size(estimated_prob=0.6, market_price=0.5, bankroll=1000.0, inventory_q=0.0)

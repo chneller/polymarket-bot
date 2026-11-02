@@ -1,6 +1,0 @@
-# Manually flagged wallets: hedge/MM/volume-farmer — never track or copy
-# One address per line; lines starting with # are ignored
-# Add via config: WALLET_COPY_BLOCKED_WALLETS=0x...,0x... (comma-separated)
-0xd84c2b6d65dc596f49c7b6aadd6d74ca91e407b9
-0x2d8b401d2f0e6937afebf18e19e11ca568a5260a
-0xe00740bce98a594e26861838885ab310ec3b548c

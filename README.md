@@ -203,16 +203,9 @@ The `ml_directional` strategy is split into:
 
 #### Trained Artifacts
 
-| Artifact | Target | Type | Accuracy | Brier | Net EV/trade | Profit Factor |
-|----------|--------|------|----------|-------|-------------|---------------|
-| `ml_directional_15m_ohlc_full.pkl` | 15m | OHLC full-history (2018-2026) | 0.720 | 0.189 | 0.479 | 2.85 |
-| `ml_directional_1h_ohlc_full.pkl` | 1h | OHLC full-history (2018-2026) | 0.700 | 0.198 | 0.440 | 2.60 |
-| `ml_directional_1h_ohlc_2022_2026.pkl` | 1h | OHLC recent-window (2022–2026) | 0.691 | 0.202 | 0.413 | 2.44 |
-| `ml_directional_1h_ohlc_2024_2026.pkl` | 1h | OHLC recent-window (2024–2026) | 0.679 | 0.207 | 0.392 | 2.30 |
-| `ml_directional_4h_ohlc_full.pkl` | 4h | OHLC full-history (2018-2026) | 0.640 | 0.228 | 0.307 | 1.92 |
-| `ml_directional_1d_ohlc_full.pkl` | 1d | OHLC full-history (2018-2026) | 0.513 | 0.312 | 0.027 | 1.12 |
-| `ml_directional_15m_ohlc_overlap.pkl` | 15m | OHLC (Mar–Apr 2026 window) | — | — | — | — |
-| `ml_directional_15m_micro_overlap.pkl` | 15m | OHLC + microstructure (Mar–Apr 2026 window) | 0.596 | 0.258 | 0.195 | 1.48 |
+Model artifacts (`.pkl`) and BTC OHLC CSVs are **not shipped** in this repository. Download the data and train locally with the commands below; artifacts are written to `data/ml/artifacts/` (git-ignored) and the strategy loads `ML_DIRECTIONAL_MODEL_PATH` (default `data/ml/artifacts/ml_directional_latest.pkl`).
+
+Typical artifact names: `ml_directional_15m_ohlc_full.pkl`, `ml_directional_1h_ohlc_full.pkl`, `ml_directional_4h_ohlc_full.pkl`, `ml_directional_1d_ohlc_full.pkl`, `ml_directional_15m_micro_overlap.pkl`. Always validate your own models with walk-forward backtests and paper trading; past results do not guarantee future performance.
 
 **Current live candidates:** `15m_ohlc_full` (primary) → `1h_ohlc_full` (secondary).  
 Recent-window 1h challengers were trained with the same 1h OHLC feature recipe and walk-forward defaults, but neither beat `1h_ohlc_full` on accuracy, Brier, net EV/trade, or profit factor.  
@@ -235,7 +228,8 @@ Live inference reconstructs the same schema from `BinanceFeed.get_recent_ohlcv()
 #### Training Commands
 
 ```bash
-# Top-up OHLC data (all timeframes)
+# Download (first run) or top up BTC OHLC data from Binance (all timeframes)
+pip install binance-historical-data
 ./.venv/bin/python scripts/topup_btc_ohlc.py
 
 # Train 15m full-history artifact (primary)
@@ -676,8 +670,22 @@ python -m src.bot --strategy my_strategy
 - Not financial advice. Use at your own risk; the authors accept no liability for losses.
 - Always paper trade first and start with small position sizes.
 - The adaptive risk manager reduces risk, but no system is foolproof.
-- Polymarket charges **taker fees** on many market categories (including crypto). Make sure fee settings match the [current fee schedule](https://docs.polymarket.com/trading/fees) before going live.
+- Polymarket charges **taker fees** on most market categories (see [Trading costs](#trading-costs)).
 - Never commit `.env`, private keys or API credentials. Use a dedicated trading wallet holding only funds you can afford to lose.
+
+## Trading costs
+
+Fees follow Polymarket's [documented formula](https://docs.polymarket.com/trading/fees), implemented in `src/fees.py`:
+
+```
+fee (USDC) = shares × feeRate × p × (1 − p)
+```
+
+- **Makers pay no fees**; only takers do. Fees are rounded to 5 decimals.
+- The per-market `feeRate` is read from the Gamma market's `feeSchedule` (`feesEnabled=false` → no fee).
+- Fallback rates by category (override with `FEE_RATE_<CATEGORY>`, default category `FEE_DEFAULT_CATEGORY=crypto`): crypto 0.07; sports, economics, culture, weather, other and combos 0.05; finance, politics, mentions and tech 0.04; geopolitics 0.
+- Example: 100 crypto shares at $0.50 cost $1.75 in taker fees (3.5% of the $50 notional).
+- `TRADING_FEE_RATE` is **deprecated**. If you set it explicitly it is applied as a legacy flat fraction of notional; leave it unset to use the formula.
 
 ## Roadmap / Current research
 
@@ -697,7 +705,7 @@ For bugs or ideas, please open an issue.
 ## API Documentation
 
 - [Polymarket CLOB API](https://docs.polymarket.com)
-- [Polymarket WebSocket](https://docs.polymarket.com/developers/CLOB/websocket)
+- [Polymarket WebSocket](https://docs.polymarket.com/market-data/realtime-data)
 - [CLOB SDK v2 notes in this repo](docs/clob-v2-sdk.md)
 - [Binance WebSocket](https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams)
 - [Telegram Bot API](https://core.telegram.org/bots/api)

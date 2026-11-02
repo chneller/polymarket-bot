@@ -27,6 +27,7 @@ from .base_strategy import (
     MarketData
 )
 from ..config import ORDER_SIZE_USD, TRADING_FEE_RATE
+from ..fees import estimate_taker_fee
 
 # Keywords identifying short-term crypto markets (5-min, 15-min, 1-hour)
 _SHORTTERM_KEYWORDS = ["5 min", "15 min", "1 hour", "up or down", "updown"]
@@ -131,7 +132,7 @@ class ArbitrageStrategy(BaseStrategy):
         
         # Account for fees (buy YES + buy NO = 2 trades)
         if self.include_fees:
-            fees = total_cost * TRADING_FEE_RATE * 2  # Fee on each buy
+            fees = estimate_taker_fee(1.0, yes_ask) + estimate_taker_fee(1.0, no_ask)  # per 1-share pair
             net_profit = gross_profit - fees
             net_profit_pct = net_profit / total_cost if total_cost > 0 else 0
         else:

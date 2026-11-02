@@ -90,3 +90,10 @@ data/collectors/
 *.sqlite
 *.sqlite-*
 logs/
+# User-generated ML data and models (train locally, see README)
+data/ml/artifacts/*
+!data/ml/artifacts/.gitkeep
+data/ml/ohlc/**/*.csv
+*.pkl
+# Optional user blocklist
+data/blocked_wallets.txt

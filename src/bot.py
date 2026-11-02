@@ -55,6 +55,9 @@ from .config import (
     TELEGRAM_ALERTS_ENABLED,
     MIN_VOLUME_USD,
     TRADING_FEE_RATE,
+)
+from .fees import estimate_taker_fee, market_fee_params
+from .config import (
     BALANCE_STALE_BLOCK_BUYS,
     BALANCE_STALE_MAX_SECONDS,
     POLYMARKET_MIN_ORDER_SIZE,
@@ -1400,6 +1403,9 @@ class PolymarketBot:
                 accepting_orders = bool(market.get("acceptingOrders", True))
                 fees_enabled = bool(market.get("feesEnabled", True))
                 fee_rate_bps = market.get("feeRateBps")
+                if fee_rate_bps is None and fees_enabled:
+                    _rate, _exp, _taker_only = market_fee_params(market)
+                    fee_rate_bps = _rate * 10_000
                 try:
                     fee_rate_bps = float(fee_rate_bps) if fee_rate_bps is not None else None
                 except (TypeError, ValueError):
@@ -2545,8 +2551,11 @@ class PolymarketBot:
         elif (order.metadata or {}).get("post_only"):
             fee_rate = 0.0
         else:
-            fee_rate = TRADING_FEE_RATE
-        fee_est = executed_notional * fee_rate
+            fee_rate = None
+        is_maker = bool((order.metadata or {}).get("post_only")) or str(
+            fill_data.get("trader_side") or fill_data.get("liquidity") or ""
+        ).lower() in ("maker", "m")
+        fee_est = 0.0 if is_maker else estimate_taker_fee(fill_size, fill_price, fee_rate)
         outcome_side = (
             (order.metadata or {}).get("outcome_side")
             or (order.metadata or {}).get("side")
