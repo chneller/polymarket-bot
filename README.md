@@ -1,6 +1,7 @@
 # Polymarket Trading Bot
 
-[![Alpha](https://img.shields.io/badge/phase-alpha-orange)](https://github.com)
+[![Alpha](https://img.shields.io/badge/phase-alpha-orange)](https://github.com/chneller/polymarket-bot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12-3776ab?logo=python&logoColor=white)](https://python.org)
 [![Polymarket](https://img.shields.io/badge/Polymarket-CLOB-6366f1)](https://polymarket.com)
 [![Binance](https://img.shields.io/badge/Binance-WebSocket-f0b90b?logo=binance)](https://binance.com)
@@ -10,7 +11,9 @@
 
 ---
 
-An institutional-grade algorithmic trading platform for Polymarket prediction markets, powered by the [bs-p](https://github.com/lubluniky/bs-p) native math engine for dynamic sizing, greeks and risk.
+An open-source algorithmic trading framework for [Polymarket](https://polymarket.com) prediction markets, focused on short-horizon crypto Up/Down markets. It uses the [bs-p](https://github.com/lubluniky/bs-p) native math engine for dynamic sizing, Greeks and risk, and ships with paper trading, backtesting and an offline ML pipeline.
+
+> **Disclaimer:** This is experimental software provided for educational and research purposes. It is **not financial advice**. Trading prediction markets involves substantial risk of loss; you use this software **entirely at your own risk**. Check that prediction-market trading is legal where you live before using it.
 
 ## Features
 
@@ -19,7 +22,7 @@ An institutional-grade algorithmic trading platform for Polymarket prediction ma
 - **Binance BTC Feed** — real-time VWAP, volatility, and price velocity for 5-min BTC markets
 - **Adaptive Risk Manager** — bankroll-proportional limits, drawdown throttling, portfolio Greeks monitoring, pre-trade shock testing, auto-halt
 - **Authenticated User WebSocket** — near-real-time order and trade lifecycle updates in live mode, with REST sync fallback
-- **Multi-Wallet Profiles** — run CHR/BB/etc. concurrently from one shared config file
+- **Multi-Wallet Profiles** — run several wallets concurrently from one shared config file (e.g. `BOT_WALLET_ID=WALLET_A`, `WALLET_B`)
 - **Strategy Analytics** — per-strategy P&L, Sharpe ratio, win rate, streaks, auto-disable losers
 - **Telegram Alerts** — fills, risk events, Greeks threshold alerts, daily summaries
 - **Inventory-Aware Kelly Sizing** — position sizes shrink as existing inventory grows, preventing over-concentration
@@ -96,13 +99,16 @@ Optional (recommended for multi-wallet):
 # Run specific strategy
 ./venv/bin/python -m src.bot --strategy cross_asset
 
+# Create local (git-ignored) profiles from the template first:
+#   cp config/settings.ml_live.example.env config/settings.ml_paper.env
+#   cp config/settings.ml_live.example.env config/settings.ml_live.env
 # Run the ML directional strategy (paper, recommended first)
-BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.ml_paper.env BOT_WALLET_ID=CHR \
-  caffeinate -i ./.venv/bin/python -m src.bot --strategy ml_directional
+BOT_PUBLIC_CONFIG_FILE=./config/settings.ml_paper.env BOT_WALLET_ID=WALLET_A \
+  ./.venv/bin/python -m src.bot --strategy ml_directional
 
 # Run ML directional live (after paper validation)
-BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.ml_live.env BOT_WALLET_ID=CHR \
-  caffeinate -i ./.venv/bin/python -m src.bot --strategy ml_directional
+BOT_PUBLIC_CONFIG_FILE=./config/settings.ml_live.env BOT_WALLET_ID=WALLET_A \
+  ./.venv/bin/python -m src.bot --strategy ml_directional
 
 # Run all non-disabled strategies
 ./venv/bin/python -m src.bot --strategy all
@@ -113,15 +119,15 @@ BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.ml_live.env BOT_WALLET_ID=CHR \
 # Force paper mode
 ./venv/bin/python -m src.bot --paper
 
-# bs-p spread + OBI with native engine (CHR wallet, paper first)
-BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.live BOT_WALLET_ID=CHR PAPER_TRADING=true caffeinate -i ./venv/bin/python -m src.bot --strategy all
+# bs-p spread + OBI with native engine (paper first)
+BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_a.live BOT_WALLET_ID=WALLET_A PAPER_TRADING=true ./venv/bin/python -m src.bot --strategy all
 
 # Multi-wallet live (two processes)
-BOT_PUBLIC_CONFIG_FILE=./config/settings.chr.live BOT_WALLET_ID=CHR caffeinate -i ./venv/bin/python -m src.bot --strategy all
-BOT_PUBLIC_CONFIG_FILE=./config/settings.bb.live BOT_WALLET_ID=BB caffeinate -i ./venv/bin/python -m src.bot --strategy all
+BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_a.live BOT_WALLET_ID=WALLET_A ./venv/bin/python -m src.bot --strategy all
+BOT_PUBLIC_CONFIG_FILE=./config/settings.wallet_b.live BOT_WALLET_ID=WALLET_B ./venv/bin/python -m src.bot --strategy all
 ```
 
-Flags: `-i` prevents idle sleep, `-d` prevents display sleep.
+On macOS you can prefix long-running commands with `caffeinate -i` to prevent idle sleep.
 
 ## Configuration
 
@@ -159,7 +165,7 @@ Key settings:
 
 When `ADAPTIVE_RISK_ENABLED=true`, limits scale with current balance and drawdown state:
 
-| Metric | % of Bankroll | With $304 |
+| Metric | % of Bankroll | Example (~$300 bankroll) |
 |--------|---------------|-----------|
 | Max per trade | 3% | ~$9.12 |
 | Max per market | 12% | ~$36.48 |
@@ -350,7 +356,7 @@ Model-driven directional trading for 15m and 1h BTC Up/Down markets:
 - Safety: rolling accuracy/Brier halts, feed-staleness halts, per-market signal cooldowns
 - **Lean mode** (`ML_DIRECTIONAL_LEAN_MODE=true`) restricts scanning to BTC-only crypto markets
 - Lean mode also narrows Binance symbols at feed construction time, and can be reused by single-strategy `terminal_convergence` runs for faster startup
-- Profile configs: `config/settings.chr.ml_paper.env` (paper), `config/settings.chr.ml_live.env` (live)
+- Profile configs: `config/settings.ml_paper.env` (paper), `config/settings.ml_live.env` (live)
 - Docs: [ML Directional Edge](docs/strategies/ml-directional-edge/README.md)
 - Checklist: [Implementation Checklist](docs/strategies/ml-directional-edge/IMPLEMENTATION_CHECKLIST.md)
 
@@ -596,9 +602,8 @@ polymarket-bot/
 │   │   └── ml_directional_15m_micro_overlap.pkl
 │   └── collectors/                   # SQLite from microstructure collector
 ├── config/
-│   ├── settings.chr.live.example         # CHR wallet bs-p config template
-│   ├── settings.chr.ml_paper.env         # ML directional paper profile
-│   └── settings.chr.ml_live.env          # ML directional live profile
+│   ├── settings.ml_live.example.env              # ML directional profile template (copy, then edit)
+│   └── settings.ml_live.recommended.example.env  # Conservative recommended variant
 ├── docs/
 │   ├── strategies/
 │   │   └── ml-directional-edge/
@@ -666,17 +671,32 @@ python -m src.bot --strategy my_strategy
 
 ## Risk Warning
 
-⚠️ **This bot trades real money when `PAPER_TRADING=false`**
+⚠️ **This bot trades real money when `PAPER_TRADING=false`.**
 
-- Always paper test first
-- Start with small position sizes
-- The adaptive risk manager protects your bankroll, but no system is foolproof
-- Understand the strategies before deploying live
-- Trading involves risk of loss
+- Not financial advice. Use at your own risk; the authors accept no liability for losses.
+- Always paper trade first and start with small position sizes.
+- The adaptive risk manager reduces risk, but no system is foolproof.
+- Polymarket charges **taker fees** on many market categories (including crypto). Make sure fee settings match the [current fee schedule](https://docs.polymarket.com/trading/fees) before going live.
+- Never commit `.env`, private keys or API credentials. Use a dedicated trading wallet holding only funds you can afford to lose.
+
+## Roadmap / Current research
+
+We are currently researching **JEV**, a data-driven approach to short-horizon Polymarket markets (such as hourly crypto Up/Down markets). The work starts with a recorder that collects public market data for offline research and backtesting, with the goal of combining data-fed decision making with deterministic risk guardrails. Nothing from this research is part of the bot yet.
+
+## Contributing
+
+Contributions are welcome:
+
+1. Fork the repo and create a feature branch.
+2. Keep secrets out of commits (`.env`, keys and personal config files are git-ignored).
+3. Run the tests with `pytest` before opening a pull request.
+4. Describe the change and how you tested it (paper mode preferred).
+
+For bugs or ideas, please open an issue.
 
 ## API Documentation
 
-- [Polymarket CLOB API](https://docs.polymarket.com/quickstart/orders/first-order)
+- [Polymarket CLOB API](https://docs.polymarket.com)
 - [Polymarket WebSocket](https://docs.polymarket.com/developers/CLOB/websocket)
 - [CLOB SDK v2 notes in this repo](docs/clob-v2-sdk.md)
 - [Binance WebSocket](https://developers.binance.com/docs/binance-spot-api-docs/web-socket-streams)
@@ -686,4 +706,4 @@ python -m src.bot --strategy my_strategy
 
 ## License
 
-MIT - Use at your own risk.
+Released under the [MIT License](LICENSE). Provided "as is", without warranty of any kind. Use at your own risk.

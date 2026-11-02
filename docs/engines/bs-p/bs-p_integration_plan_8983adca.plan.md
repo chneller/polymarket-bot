@@ -176,7 +176,7 @@ This is the highest-impact swap. The current strategy uses crude `bid + price_im
 | `x_t`      | logit of mid           | `data.mid_price`                        | `kernel_logit(data.mid_price)`                                                                                                                                                                                                                                         |
 | `q_t`      | inventory (shares)     | `risk_manager.positions[token_id].size` | Positive = long, negative = short. Use 0.0 for no position.                                                                                                                                                                                                            |
 | `sigma_b`  | belief volatility      | Bootstrap from market                   | On startup: `implied_belief_volatility_batch(bid, ask, ...)` on all active markets. During runtime: exponential moving average of recent implied vols. Alternatively, map from `binance_feed.volatility_5m` via a calibration factor.                                  |
-| `gamma`    | risk aversion          | New config param                        | **Start at 1.0 for $304 bankroll** (conservative). Lower (0.3-0.5) tightens quotes = more aggressive. Higher (1.0-2.0) widens quotes = safer. Add `QUOTING_GAMMA` to config. Scale inversely with bankroll growth: `gamma = base_gamma * (300 / current_balance)^0.5`. |
+| `gamma`    | risk aversion          | New config param                        | **Start at 1.0 for your bankroll bankroll** (conservative). Lower (0.3-0.5) tightens quotes = more aggressive. Higher (1.0-2.0) widens quotes = safer. Add `QUOTING_GAMMA` to config. Scale inversely with bankroll growth: `gamma = base_gamma * (300 / current_balance)^0.5`. |
 | `tau`      | time to resolution     | `data.end_date_ts`                      | `max(0.001, (end_date_ts - time.time()) / 86400)` — fraction of a day remaining. For 5-min markets: ~0.003. For daily markets: 0.1-1.0.                                                                                                                                |
 | `k`        | liquidity/arrival rate | `data.volume_24h`                       | Estimate: `k = volume_24h / 86400 * scan_interval`. For a market doing $100k/day: `k ~ 5.8`. **Start with `k = 2.0`** and calibrate by measuring actual fill rates. Add `QUOTING_K` to config.                                                                         |
 
@@ -223,7 +223,7 @@ The current Kelly has no inventory awareness — it sizes based purely on edge a
 | `q_t`        | current inventory       | `risk_manager.positions[token_id].size` | **New input.** Currently `kelly_size()` doesn't know about existing inventory. Wire the position lookup into the sizing call.                                                      |
 | `gamma`      | risk aversion           | Same `QUOTING_GAMMA` config param       | Use the same gamma as the quoting engine for consistency.                                                                                                                          |
 | `risk_limit` | max position allowed    | `risk_manager._get_max_position()`      | Already computed by adaptive risk: `current_balance * max_position_pct * throttle_factor`. Convert from USD to contract units: `risk_limit_contracts = risk_limit_usd / market_p`. |
-| `max_clip`   | absolute max single bet | `KELLY_MAX_BET_FRACTION * bankroll`     | Currently 5% of bankroll = $15.20 at $304.                                                                                                                                         |
+| `max_clip`   | absolute max single bet | `KELLY_MAX_BET_FRACTION * bankroll`     | Currently 5% of bankroll = $15.20 at your bankroll.                                                                                                                                         |
 
 
 **Output mapping:**
@@ -429,7 +429,7 @@ If running two wallet profiles (the bot already supports `BOT_WALLET_ID`):
 
 - Wallet A: old math (control)
 - Wallet B: bs-p math (treatment)
-- Split $304 as $152/$152
+- Split your bankroll evenly between wallets
 - Run for 1 week, compare: total PnL, Sharpe ratio, max drawdown, fill rate
 
 ---
@@ -489,14 +489,14 @@ Add a new panel to `dashboard.py` between the Portfolio and Strategy sections:
 
 ---
 
-## 10. Viability with $304 USDC
+## 10. Viability with your bankroll
 
-**Can you run profitably with $304?** Yes, but only with disciplined sizing — which is exactly what bs-p enables.
+**Can you run profitably with your bankroll?** Yes, but only with disciplined sizing — which is exactly what bs-p enables.
 
-### Current Adaptive Risk Limits at $304
+### Current Adaptive Risk Limits at your bankroll
 
 
-| Parameter                        | Value | At $304               |
+| Parameter                        | Value | At your bankroll               |
 | -------------------------------- | ----- | --------------------- |
 | `ADAPTIVE_MAX_POSITION_PCT`      | 12%   | $36.48 per market     |
 | `ADAPTIVE_MAX_EXPOSURE_PCT`      | 30%   | $91.20 total          |
@@ -520,13 +520,13 @@ ADAPTIVE_MAX_SINGLE_TRADE_PCT=0.03  # $9.12 max per trade
 ORDER_SIZE_USD=5             # Base order size $5
 ```
 
-### Strategy for $304 (Slow, Safe, Steady)
+### Strategy for your bankroll (Slow, Safe, Steady)
 
 1. **Disable spread strategy initially** (keep it disabled until Phase 4 shadow mode validates it)
 2. **Focus on:** cross-asset (BTC), terminal convergence, orderbook imbalance — these have clearer edges at small scale
 3. **Use quarter Kelly with inventory scaling** — bs-p's `adaptive_kelly_clip_batch` will naturally keep positions small
 4. **Target:** 0.5-1.0% daily return ($1.50-$3.00/day). This is a 183-365% annualized return — aggressive in traditional markets, realistic for prediction markets with structural inefficiencies
-5. **Reinvest all profits** — compound growth from $304. At 0.5%/day, $304 becomes ~$500 in 60 days
+5. **Reinvest all profits** — compound growth from your bankroll. At 0.5%/day, your bankroll becomes ~$500 in 60 days
 6. **Monthly review:** Once bankroll exceeds $500, reduce `QUOTING_GAMMA` to 0.7 and switch to `half` Kelly
 
 ### Adaptive Gamma Schedule (New Insight)
@@ -540,7 +540,7 @@ def adaptive_gamma(base_gamma: float, starting_balance: float, current_balance: 
     return base_gamma * (ratio ** 0.5)  # Square root scaling — gentle reduction
 ```
 
-At $304: `gamma = 1.0`. At $600: `gamma = 0.71`. At $1200: `gamma = 0.50`. This automatically transitions from conservative to moderate as the bankroll can absorb more risk.
+At your bankroll: `gamma = 1.0`. At $600: `gamma = 0.71`. At $1200: `gamma = 0.50`. This automatically transitions from conservative to moderate as the bankroll can absorb more risk.
 
 ---
 

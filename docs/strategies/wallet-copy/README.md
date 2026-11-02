@@ -121,7 +121,7 @@ Blocked wallets are excluded from rotation candidates, leaderboard merge, and co
 ### Enabling Rotation
 
 ```bash
-# In your config (e.g. settings.chr.live)
+# In your config (e.g. settings.wallet_a.live)
 WALLET_ROTATION_ENABLED=true
 WALLET_COPY_USE_LEADERBOARD=false   # Rotation replaces leaderboard merge
 TRACKED_WALLETS=0xabc...,0xdef...   # Initial seed (or leave empty to start from leaderboard)

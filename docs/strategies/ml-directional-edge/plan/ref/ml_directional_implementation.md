@@ -55,7 +55,7 @@ Use this as the runbook for research -> backtest -> paper -> live.
 ## 4) Bot Integration
 
 - [ ] Enable strategy:
-  - [ ] Set profile values in `config/settings.chr.live` (or your active profile file), not `.env`:
+  - [ ] Set profile values in `config/settings.wallet_a.live` (or your active profile file), not `.env`:
     - [ ] `ML_DIRECTIONAL_ENABLED=true`
     - [ ] `ML_DIRECTIONAL_MODEL_DIR=./data/ml/models/latest`
 - [ ] Run strategy in paper mode:
