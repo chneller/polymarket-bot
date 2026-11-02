@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 `requirements.txt` pins **[py-clob-client-v2](https://pypi.org/project/py-clob-client-v2/)** for Polymarket’s CLOB API. The older `py-clob-client` (v1) package is not used. Behavior (auth flow, `PartialCreateOrderOptions`, batch `PostOrdersV2Args`, `OrderPayload` cancels) is summarized in **[docs/clob-v2-sdk.md](docs/clob-v2-sdk.md)**.
 
-### 2. Build the Native Math Engine (Optional but Recommended)
+### 2. Build the Native Math Engine (Optional)
 
 ```bash
 ./scripts/build_native.sh
