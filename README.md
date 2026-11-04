@@ -11,7 +11,7 @@
 
 ---
 
-An open-source algorithmic trading framework for [Polymarket](https://polymarket.com) prediction markets, focused on short-horizon crypto Up/Down markets. It uses the [bs-p](https://github.com/lubluniky/bs-p) native math engine for dynamic sizing, Greeks and risk, and ships with paper trading, backtesting and an offline ML pipeline.
+An open-source algorithmic trading framework for [Polymarket](https://polymarket.com) prediction markets, focused on short-horizon crypto Up/Down markets. It uses the [bs-p](https://github.com/lubluniky/bs-p) native math engine for dynamic sizing, Greeks and risk, and ships with live trading, paper trading, backtesting, wallet copy, telegram bot and an offline ML pipeline.
 
 > **Disclaimer:** This is experimental software provided for educational and research purposes. It is **not financial advice**. Trading prediction markets involves substantial risk of loss; you use this software **entirely at your own risk**. Check that prediction-market trading is legal where you live before using it.
 
